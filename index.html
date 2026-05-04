@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>말씀 - Holy Bible App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a3a6b; --primary-light: #2d5aa0; --gold: #c9a84c; --gold-light: #f0d080;
+  --bg: #f8f5f0; --text: #1a1209; --text-light: #6b5a3e;
+  --surface: #ffffff; --surface2: #f0ebe3; --border: #e0d5c5;
+  --radius: 16px; --shadow: 0 4px 24px rgba(26,18,9,0.12);
+}
+[data-theme="dark"] {
+  --bg:#0d0b08; --text:#f0e8d8; --text-light:#a09070;
+  --surface:#1a1510; --surface2:#251e15; --border:#3a3020;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;overflow-x:hidden;}
+.topnav{position:sticky;top:0;z-index:100;background:var(--primary);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.3);}
+.topnav .logo{display:flex;align-items:center;gap:8px;font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold-light);letter-spacing:1px;}
+.topnav-actions{display:flex;gap:12px;}
+.topnav-actions button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px;}
+.bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,8px);}
+.tab-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;background:none;border:none;cursor:pointer;color:var(--text-light);font-size:10px;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;}
+.tab-btn .tab-icon{font-size:20px;transition:transform 0.2s;}
+.tab-btn.active{color:var(--primary);font-weight:700;}
+.tab-btn.active .tab-icon{transform:scale(1.15);}
+.page{display:none;padding:0 0 80px;min-height:calc(100vh - 56px);}
+.page.active{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* HOME */
+.home-hero{background:linear-gradient(135deg,var(--primary) 0%,#0d2347 60%,#1a3a1a 100%);padding:28px 20px 32px;position:relative;overflow:hidden;}
+.home-hero::before{content:'✝';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:160px;opacity:0.06;color:#fff;font-family:serif;}
+.home-greeting{color:rgba(255,255,255,0.8);font-size:13px;margin-bottom:4px;}
+.home-title{color:#fff;font-size:22px;font-weight:700;line-height:1.3;}
+.home-title span{color:var(--gold-light);}
+.verse-card{margin:16px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border);}
+.verse-card-header{background:linear-gradient(90deg,var(--primary),var(--primary-light));padding:10px 16px;color:#fff;font-size:13px;font-weight:500;display:flex;justify-content:space-between;align-items:center;}
+.verse-card-body{padding:16px;font-family:'Noto Serif KR',serif;font-size:15px;line-height:1.8;}
+.verse-ref{font-size:12px;color:var(--text-light);margin-top:8px;font-weight:600;}
+.quick-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 16px 16px;}
+.quick-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.quick-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.quick-btn .qb-icon{font-size:26px;}
+.quick-btn .qb-label{font-size:11px;font-weight:500;color:var(--text-light);}
+.quick-btn.featured{background:linear-gradient(135deg,var(--primary),var(--primary-light));border-color:transparent;}
+.section-title{font-size:17px;font-weight:700;padding:16px 16px 10px;}
+.news-grid{padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.news-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:transform 0.2s;}
+.news-card:hover{transform:translateY(-2px);}
+.news-thumb{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#e8e0d0,#d0c8b8);display:flex;align-items:center;justify-content:center;font-size:32px;}
+.news-text{padding:8px 10px 10px;font-size:12px;line-height:1.4;font-weight:500;}
+
+/* BIBLE */
+.bible-header{background:var(--primary);padding:12px 16px;display:flex;align-items:center;gap:8px;}
+.bible-selector{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);border-radius:20px;padding:7px 14px;cursor:pointer;color:#fff;font-size:15px;font-weight:600;border:none;font-family:'Noto Sans KR',sans-serif;}
+.bible-version-badge{background:var(--gold);color:#1a0a00;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;border:none;font-family:'Noto Sans KR',sans-serif;}
+.loading-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{color:var(--text-light);font-size:14px;}
+.error-box{margin:20px 16px;background:#fff5f5;border:1px solid #fcc;border-radius:12px;padding:20px;text-align:center;}
+.error-box h3{color:#c00;margin-bottom:8px;font-size:16px;}
+.error-box p{color:#666;font-size:13px;line-height:1.6;}
+.error-box code{display:block;background:#f5f5f5;border-radius:6px;padding:10px;margin:10px 0;font-size:11px;text-align:left;word-break:break-all;line-height:1.6;}
+.retry-btn{margin-top:12px;padding:8px 20px;background:var(--primary);color:#fff;border:none;border-radius:20px;cursor:pointer;font-size:13px;font-family:'Noto Sans KR',sans-serif;}
+.bible-text-area{padding:16px;}
+.bible-chapter-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);font-weight:600;text-align:center;margin-bottom:20px;letter-spacing:2px;}
+.verse-line{display:flex;gap:10px;margin-bottom:14px;cursor:pointer;padding:6px 8px;border-radius:8px;transition:background 0.15s;}
+.verse-line:hover{background:var(--surface2);}
+.verse-line.highlighted{background:#fff3c4;}
+[data-theme="dark"] .verse-line.highlighted{background:#3a3000;}
+.verse-num{min-width:24px;font-size:12px;font-weight:700;color:var(--primary);padding-top:3px;text-align:right;}
+.verse-text{font-family:'Noto Serif KR',serif;font-size:16px;line-height:1.85;}
+
+/* SETUP CARD */
+.setup-card{margin:16px;background:var(--surface);border-radius:var(--radius);border:2px dashed var(--border);padding:24px;text-align:center;}
+.setup-card h3{font-size:17px;margin-bottom:8px;}
+.setup-card p{font-size:13px;color:var(--text-light);line-height:1.6;margin-bottom:16px;}
+.setup-steps{text-align:left;background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;}
+.setup-steps li{font-size:13px;line-height:1.8;color:var(--text);}
+.setup-steps code{background:var(--border);border-radius:4px;padding:1px 6px;font-size:11px;}
+.load-btn{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.url-input-wrap{display:flex;gap:8px;margin-bottom:12px;}
+.url-input{flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;}
+.url-input:focus{border-color:var(--primary);}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;align-items:flex-end;}
+.modal-sheet{background:var(--surface);width:100%;max-width:480px;margin:0 auto;border-radius:24px 24px 0 0;max-height:80vh;overflow-y:auto;padding:20px 0 40px;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;margin-bottom:16px;}
+.modal-tab{flex:1;padding:10px;text-align:center;border:none;background:none;cursor:pointer;font-size:15px;font-weight:500;color:var(--text-light);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;font-family:'Noto Sans KR',sans-serif;}
+.modal-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:700;}
+.testament-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px;}
+.testament-btn{padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+.testament-btn.active{border-color:var(--primary);background:var(--primary);color:#fff;}
+.books-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;}
+.book-btn{padding:10px 4px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;text-align:center;transition:all 0.2s;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+.book-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.num-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:0 16px;}
+.num-btn{aspect-ratio:1;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+.num-btn.active{background:var(--gold);color:#1a0a00;border-color:var(--gold);font-weight:700;}
+.num-btn:hover{border-color:var(--primary);}
+
+/* HYMN */
+.hymn-search{padding:12px 16px;display:flex;gap:8px;}
+.search-box{flex:1;padding:10px 14px;border-radius:24px;border:1px solid var(--border);background:var(--surface);font-size:14px;color:var(--text);outline:none;font-family:'Noto Sans KR',sans-serif;}
+.hymn-number-input{width:80px;padding:10px;border-radius:24px;border:1px solid var(--border);background:var(--surface);font-size:14px;text-align:center;outline:none;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+.hymn-display{margin:0 16px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.hymn-title-bar{background:var(--primary);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.hymn-title{color:#fff;font-size:18px;font-weight:700;}
+.hymn-subtitle{color:rgba(255,255,255,0.7);font-size:12px;}
+.hymn-sheet{padding:16px;font-family:'Noto Serif KR',serif;}
+.hymn-verse{margin-bottom:20px;}
+.hymn-verse-num{font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;}
+.hymn-verse-text{font-size:15px;line-height:2;}
+.hymn-chorus{background:var(--surface2);border-left:3px solid var(--gold);padding:12px 14px;border-radius:0 8px 8px 0;margin:16px 0;}
+.hymn-player{padding:12px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);}
+.play-btn{width:44px;height:44px;border-radius:50%;background:var(--primary);border:none;cursor:pointer;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.progress-bar-wrap{flex:1;}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;cursor:pointer;}
+.progress-fill{height:100%;background:var(--primary);border-radius:2px;width:0%;transition:width 0.1s;}
+.time-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-light);margin-top:3px;}
+
+/* CHALLENGE */
+.challenge-hero{background:linear-gradient(135deg,#1a3a6b,#0d2a4a);padding:24px 20px;text-align:center;}
+.challenge-hero h2{color:#fff;font-size:20px;font-weight:700;margin-bottom:4px;}
+.challenge-hero p{color:rgba(255,255,255,0.7);font-size:13px;}
+.progress-ring-container{position:relative;width:140px;height:140px;margin:20px auto;}
+.ring-svg{transform:rotate(-90deg);}
+.progress-ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.progress-ring-pct{font-size:28px;font-weight:700;color:var(--primary);}
+.progress-ring-label{font-size:11px;color:var(--text-light);}
+.book-progress-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);}
+.bp-name{width:80px;font-size:13px;font-weight:600;}
+.bp-bar{flex:1;height:6px;background:var(--border);border-radius:3px;}
+.bp-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-light));border-radius:3px;}
+.bp-pct{width:36px;text-align:right;font-size:12px;color:var(--text-light);}
+
+/* SETTINGS */
+.settings-profile{background:var(--surface);padding:20px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;}
+.profile-name{font-size:18px;font-weight:700;}
+.profile-sub{font-size:13px;color:var(--text-light);margin-top:2px;}
+.settings-section{padding:16px 0 0;}
+.settings-section-title{font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text-light);text-transform:uppercase;padding:0 16px 8px;}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;}
+.settings-item{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);border-right:1px solid var(--border);cursor:pointer;transition:background 0.15s;background:var(--surface);}
+.settings-item:hover{background:var(--surface2);}
+.settings-item:nth-child(2n){border-right:none;}
+.settings-item-label{font-size:14px;}
+.settings-arrow{color:var(--text-light);font-size:12px;}
+.lang-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 16px;}
+.lang-btn{padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px;}
+.lang-btn.active{border-color:var(--primary);background:rgba(26,58,107,0.08);}
+.lang-flag{font-size:22px;}
+.lang-name{font-size:13px;font-weight:600;}
+.lang-native{font-size:11px;color:var(--text-light);}
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--border);border:none;cursor:pointer;position:relative;transition:background 0.3s;}
+.toggle.on{background:var(--primary);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.toggle.on::after{transform:translateX(20px);}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--primary);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:all 0.3s;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="logo"><span>✞</span><span>말씀</span></div>
+  <div class="topnav-actions">
+    <button onclick="showToast('🔍 검색')">🔍</button>
+    <button onclick="goPage('settings')">👤</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="home-hero">
+    <div class="home-greeting">오늘도 말씀으로 하루를 시작하세요</div>
+    <div class="home-title">말씀이 <span>빛이요</span><br>생명이 되리라</div>
+  </div>
+  <div class="verse-card">
+    <div class="verse-card-header">
+      <span>📖 오늘의 말씀</span>
+      <span id="today-date" style="font-size:11px;opacity:0.8"></span>
+    </div>
+    <div class="verse-card-body">
+      내가 노래로 하나님의 이름을 찬송하며 감사함으로 하나님을 위대하시다 하리니
+      이것이 소 곧 뿔과 굽이 있는 황소를 드림보다 여호와를 더욱 기쁘시게 함이 될 것이라
+      <div class="verse-ref">시편 69:30-31</div>
+    </div>
+  </div>
+  <div class="quick-menu">
+    <button class="quick-btn" onclick="goPage('bible')"><span class="qb-icon">📖</span><span class="qb-label">성경</span></button>
+    <button class="quick-btn" onclick="goPage('hymn')"><span class="qb-icon">🎵</span><span class="qb-label">찬송</span></button>
+    <button class="quick-btn" onclick="goPage('challenge')"><span class="qb-icon">🏆</span><span class="qb-label">도전일독</span></button>
+    <button class="quick-btn featured" onclick="goPage('settings')"><span class="qb-icon">✨</span><span class="qb-label" style="color:rgba(255,255,255,0.9)">선교사</span></button>
+  </div>
+  <div class="section-title">📰 교계 뉴스</div>
+  <div class="news-grid">
+    <div class="news-card"><div class="news-thumb">⛪</div><div class="news-text">대만 뒤덮은 부흥의 불길</div></div>
+    <div class="news-card"><div class="news-thumb">🙏</div><div class="news-text">조언 대신 공감, 처방 대신 연대</div></div>
+    <div class="news-card"><div class="news-thumb">📺</div><div class="news-text">교회 겨냥 신종 사칭 사기 주의</div></div>
+    <div class="news-card"><div class="news-thumb">🍚</div><div class="news-text">천원식당, 밥 한 끼의 사랑</div></div>
+  </div>
+  <div style="height:16px"></div>
+</div>
+
+<!-- BIBLE -->
+<div class="page" id="page-bible">
+  <div class="bible-header">
+    <button class="bible-selector" onclick="openBookModal()">
+      <span id="current-book-display">창세기</span>
+      <span id="current-chap-display">1장</span>
+      <span>▼</span>
+    </button>
+    <button class="bible-version-badge" onclick="showToast('개역한글 (퍼블릭도메인)')">개역한글 ▼</button>
+  </div>
+
+  <!-- 초기 설정 카드 (데이터 없을 때) -->
+  <div class="setup-card" id="setup-card">
+    <div style="font-size:48px;margin-bottom:12px">📖</div>
+    <h3>성경 데이터 연동하기</h3>
+    <p>개역한글 전체 성경(66권)을 무료로 불러옵니다.<br>GitHub Raw URL을 입력하고 로드 버튼을 누르세요!</p>
+    <div class="setup-steps">
+      <ol style="padding-left:18px">
+        <li>아래 기본 URL로 바로 시도해보세요</li>
+        <li>실패하면 → <code>github.com/thiagobodruk/bible</code> 에서<br><code>ko_ko.json</code> 다운로드</li>
+        <li>오빠 GitHub에 업로드 후 Raw URL 교체</li>
+        <li>Cloudflare Pages에 배포하면 완료! 🎉</li>
+      </ol>
+    </div>
+    <div class="url-input-wrap">
+      <input class="url-input" id="json-url-input" type="url"
+        value="https://raw.githubusercontent.com/thiagobodruk/bible/master/json/ko_ko.json"
+        placeholder="ko_ko.json Raw URL...">
+    </div>
+    <button class="load-btn" onclick="loadBibleData()">🔄 성경 데이터 로드</button>
+  </div>
+
+  <!-- 로딩 -->
+  <div class="loading-box" id="bible-loading" style="display:none">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-msg">성경 데이터 불러오는 중...<br><small style="font-size:11px">약 5MB, 잠시만 기다려주세요</small></div>
+  </div>
+
+  <!-- 에러 -->
+  <div class="error-box" id="bible-error" style="display:none">
+    <h3>⚠️ 로드 실패</h3>
+    <p>CORS 차단 또는 URL 오류입니다.<br><b>해결법 3가지:</b></p>
+    <code>① 오빠 GitHub에 ko_ko.json 직접 올리기
+② GitHub Pages로 배포 후 접근
+③ Cloudflare Pages에 파일 포함해서 배포</code>
+    <p style="margin-top:8px;font-size:12px;color:#888">※ 로컬 HTML 파일에서는 CORS로 인해<br>외부 GitHub Raw URL 접근이 막힐 수 있어요.<br>Cloudflare Pages 배포 후엔 정상 작동합니다!</p>
+    <button class="retry-btn" onclick="resetToSetup()">← 다시 설정</button>
+  </div>
+
+  <!-- 성경 본문 -->
+  <div id="bible-text-area" style="display:none">
+    <div class="bible-text-area">
+      <div class="bible-chapter-title" id="bible-chapter-heading">창세기 1장</div>
+      <div id="verses-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HYMN -->
+<div class="page" id="page-hymn">
+  <div class="hymn-search">
+    <input class="search-box" placeholder="찬송가 제목 검색...">
+    <input class="hymn-number-input" type="number" placeholder="장" min="1" max="645" onchange="loadHymn(this.value)">
+  </div>
+  <div class="hymn-display">
+    <div class="hymn-title-bar">
+      <div><div class="hymn-title">160장 무덤에 머물러</div><div class="hymn-subtitle">R. Lowry, 1874 · 부활</div></div>
+      <button onclick="showToast('🔖 저장!')" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">🔖</button>
+    </div>
+    <div class="hymn-sheet">
+      <div class="hymn-verse">
+        <div class="hymn-verse-num">1절</div>
+        <div class="hymn-verse-text">무덤에 머물러 예수 내 구주<br>새벽 기다렸네 예수 내 구주<br>헛되이 지키네 예수 내 구주<br>헛되이 봉하네 예수 내 구주</div>
+      </div>
+      <div class="hymn-chorus">
+        <div class="hymn-verse-num">후렴</div>
+        <div class="hymn-verse-text">원수를 다이기고 무덤에서 살아나셨네<br>이기고 사셨네 어두움을 이기시고<br>나와서 성도와 함께 길이 다스리시네<br>사셨네 사셨네 예수 다시 사셨네</div>
+      </div>
+      <div class="hymn-verse">
+        <div class="hymn-verse-num">2절</div>
+        <div class="hymn-verse-text">헛되이 지키네 예수 내 구주<br>헛되이 봉하네 예수 내 구주<br>거기 못 가두네 예수 내 구주<br>우리를 살리네 예수 내 구주</div>
+      </div>
+    </div>
+    <div class="hymn-player">
+      <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" onclick="seekAudio(event)"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="time-labels"><span id="time-cur">00:00</span><span id="time-total">03:00</span></div>
+      </div>
+      <button onclick="showToast('x1.5')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;cursor:pointer;font-size:12px;color:var(--text)">x1.0</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHALLENGE -->
+<div class="page" id="page-challenge">
+  <div class="challenge-hero"><h2>🏆 성경 일독 도전</h2><p>1년 365일, 성경 66권 완독</p></div>
+  <div class="progress-ring-container">
+    <svg class="ring-svg" width="140" height="140" viewBox="0 0 140 140">
+      <circle cx="70" cy="70" r="58" fill="none" stroke="#e0d5c5" stroke-width="12"/>
+      <circle cx="70" cy="70" r="58" fill="none" stroke="#1a3a6b" stroke-width="12"
+        stroke-dasharray="364.4" stroke-dashoffset="309.7" stroke-linecap="round"/>
+    </svg>
+    <div class="progress-ring-text"><div class="progress-ring-pct">15%</div><div class="progress-ring-label">진행중</div></div>
+  </div>
+  <div style="text-align:center;padding:0 16px 16px;color:var(--text-light);font-size:13px">124일차 · 열왕기하 19~21장</div>
+  <div class="section-title">📚 권별 진행현황</div>
+  <div id="books-progress-list"></div>
+  <div style="height:16px"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="settings-profile">
+    <div class="profile-avatar">👤</div>
+    <div><div class="profile-name">이성주 님</div><div class="profile-sub">네이버 로그인 · 바이블 선교사</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;background:var(--surface);border-bottom:1px solid var(--border)">
+    <button onclick="showToast('부록')" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-size:26px">📑</span><span style="font-size:11px;color:var(--text-light)">부록</span></button>
+    <button onclick="showToast('북마크')" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-size:26px">⭐</span><span style="font-size:11px;color:var(--text-light)">북마크</span></button>
+    <button onclick="showToast('노트')" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-size:26px">📝</span><span style="font-size:11px;color:var(--text-light)">노트</span></button>
+    <button onclick="showToast('형광펜')" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-size:26px">🖊️</span><span style="font-size:11px;color:var(--text-light)">형광펜</span></button>
+  </div>
+
+  <!-- URL 설정 -->
+  <div class="settings-section">
+    <div class="settings-section-title">🔗 성경 데이터 URL</div>
+    <div style="padding:12px 16px">
+      <input id="settings-url-input" type="url" class="url-input" style="width:100%;margin-bottom:8px"
+        placeholder="ko_ko.json Raw URL..."
+        value="https://raw.githubusercontent.com/thiagobodruk/bible/master/json/ko_ko.json">
+      <button onclick="applyAndLoad()" style="width:100%;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700">
+        ✅ 적용하고 성경 로드
+      </button>
+      <p style="margin-top:8px;font-size:11px;color:var(--text-light);line-height:1.5">
+        💡 오빠 GitHub Raw URL 또는 Cloudflare Pages 경로 입력<br>
+        예: <code style="font-size:10px">https://raw.githubusercontent.com/내ID/내저장소/main/ko_ko.json</code>
+      </p>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">🌏 언어 (20개국)</div>
+    <div class="lang-grid" id="lang-grid"></div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title">⚙️ My 설정</div>
+    <div class="settings-grid">
+      <div class="settings-item" onclick="showToast('오늘의 말씀')"><span class="settings-item-label">오늘의 말씀</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item" onclick="showToast('화면 설정')"><span class="settings-item-label">화면 설정</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item" onclick="showToast('앱 푸시')"><span class="settings-item-label">앱 푸시 설정</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item" onclick="showToast('언어 설정')"><span class="settings-item-label">언어 설정</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item" onclick="showToast('사순절 묵상')"><span class="settings-item-label">사순절 묵상</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item"><span class="settings-item-label" style="color:var(--text-light)">버전 1.0.0</span></div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title">🎨 테마</div>
+    <div class="toggle-wrap"><span style="font-size:14px">다크 모드</span><button class="toggle" id="dark-toggle" onclick="toggleDark()"></button></div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title">🎧 고객 지원</div>
+    <div class="settings-grid">
+      <div class="settings-item" onclick="showToast('고객센터')"><span class="settings-item-label">고객센터</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item" onclick="showToast('1:1 문의')"><span class="settings-item-label">1:1 문의</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item" onclick="showToast('저작권')"><span class="settings-item-label">저작권</span><span class="settings-arrow">›</span></div>
+      <div class="settings-item" onclick="showToast('개인정보')"><span class="settings-item-label">개인정보처리방침</span><span class="settings-arrow">›</span></div>
+    </div>
+  </div>
+  <div style="height:16px"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottomnav">
+  <button class="tab-btn active" onclick="goPage('home')" id="tab-home"><span class="tab-icon">🏠</span><span>홈</span></button>
+  <button class="tab-btn" onclick="goPage('bible')" id="tab-bible"><span class="tab-icon">✝</span><span>성경</span></button>
+  <button class="tab-btn" onclick="goPage('hymn')" id="tab-hymn"><span class="tab-icon">🎵</span><span>찬송</span></button>
+  <button class="tab-btn" onclick="goPage('challenge')" id="tab-challenge"><span class="tab-icon">📋</span><span>도전일독</span></button>
+  <button class="tab-btn" onclick="goPage('settings')" id="tab-settings"><span class="tab-icon">⚙️</span><span>설정</span></button>
+</nav>
+
+<!-- BOOK MODAL -->
+<div class="modal-overlay" id="book-modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="mtab-book" onclick="switchModalTab('book')">성경</button>
+      <button class="modal-tab" id="mtab-chap" onclick="switchModalTab('chap')">장</button>
+      <button class="modal-tab" id="mtab-verse" onclick="switchModalTab('verse')">절</button>
+    </div>
+    <div id="modal-content-book">
+      <div class="testament-btns">
+        <button class="testament-btn active" id="ot-btn" onclick="selectTestament('ot')">구약 (39권)</button>
+        <button class="testament-btn" id="nt-btn" onclick="selectTestament('nt')">신약 (27권)</button>
+      </div>
+      <div class="books-grid" id="books-grid"></div>
+    </div>
+    <div id="modal-content-chap" style="display:none"><div class="num-grid" id="chap-grid"></div></div>
+    <div id="modal-content-verse" style="display:none"><div class="num-grid" id="verse-grid"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const OT_BOOKS=[
+  {ko:'창세기',chaps:50},{ko:'출애굽기',chaps:40},{ko:'레위기',chaps:27},{ko:'민수기',chaps:36},{ko:'신명기',chaps:34},
+  {ko:'여호수아',chaps:24},{ko:'사사기',chaps:21},{ko:'룻기',chaps:4},{ko:'사무엘상',chaps:31},{ko:'사무엘하',chaps:24},
+  {ko:'열왕기상',chaps:22},{ko:'열왕기하',chaps:25},{ko:'역대상',chaps:29},{ko:'역대하',chaps:36},{ko:'에스라',chaps:10},
+  {ko:'느헤미야',chaps:13},{ko:'에스더',chaps:10},{ko:'욥기',chaps:42},{ko:'시편',chaps:150},{ko:'잠언',chaps:31},
+  {ko:'전도서',chaps:12},{ko:'아가',chaps:8},{ko:'이사야',chaps:66},{ko:'예레미야',chaps:52},{ko:'예레미야애가',chaps:5},
+  {ko:'에스겔',chaps:48},{ko:'다니엘',chaps:12},{ko:'호세아',chaps:14},{ko:'요엘',chaps:3},{ko:'아모스',chaps:9},
+  {ko:'오바댜',chaps:1},{ko:'요나',chaps:4},{ko:'미가',chaps:7},{ko:'나훔',chaps:3},{ko:'하박국',chaps:3},
+  {ko:'스바냐',chaps:3},{ko:'학개',chaps:2},{ko:'스가랴',chaps:14},{ko:'말라기',chaps:4}
+];
+const NT_BOOKS=[
+  {ko:'마태복음',chaps:28},{ko:'마가복음',chaps:16},{ko:'누가복음',chaps:24},{ko:'요한복음',chaps:21},{ko:'사도행전',chaps:28},
+  {ko:'로마서',chaps:16},{ko:'고린도전서',chaps:16},{ko:'고린도후서',chaps:13},{ko:'갈라디아서',chaps:6},{ko:'에베소서',chaps:6},
+  {ko:'빌립보서',chaps:4},{ko:'골로새서',chaps:4},{ko:'데살로니가전서',chaps:5},{ko:'데살로니가후서',chaps:3},{ko:'디모데전서',chaps:6},
+  {ko:'디모데후서',chaps:4},{ko:'디도서',chaps:3},{ko:'빌레몬서',chaps:1},{ko:'히브리서',chaps:13},{ko:'야고보서',chaps:5},
+  {ko:'베드로전서',chaps:5},{ko:'베드로후서',chaps:3},{ko:'요한일서',chaps:5},{ko:'요한이서',chaps:1},{ko:'요한삼서',chaps:1},
+  {ko:'유다서',chaps:1},{ko:'요한계시록',chaps:22}
+];
+const ALL_BOOKS=[...OT_BOOKS,...NT_BOOKS];
+
+const LANGUAGES=[
+  {code:'ko',flag:'🇰🇷',name:'한국어',native:'Korean'},{code:'en',flag:'🇺🇸',name:'영어',native:'English'},
+  {code:'zh',flag:'🇨🇳',name:'중국어',native:'中文'},{code:'ja',flag:'🇯🇵',name:'일본어',native:'日本語'},
+  {code:'es',flag:'🇪🇸',name:'스페인어',native:'Español'},{code:'pt',flag:'🇧🇷',name:'포르투갈어',native:'Português'},
+  {code:'fr',flag:'🇫🇷',name:'프랑스어',native:'Français'},{code:'de',flag:'🇩🇪',name:'독일어',native:'Deutsch'},
+  {code:'ru',flag:'🇷🇺',name:'러시아어',native:'Русский'},{code:'ar',flag:'🇸🇦',name:'아랍어',native:'العربية'},
+  {code:'hi',flag:'🇮🇳',name:'힌디어',native:'हिन्दी'},{code:'id',flag:'🇮🇩',name:'인도네시아어',native:'Bahasa'},
+  {code:'vi',flag:'🇻🇳',name:'베트남어',native:'Tiếng Việt'},{code:'th',flag:'🇹🇭',name:'태국어',native:'ภาษาไทย'},
+  {code:'tr',flag:'🇹🇷',name:'터키어',native:'Türkçe'},{code:'pl',flag:'🇵🇱',name:'폴란드어',native:'Polski'},
+  {code:'nl',flag:'🇳🇱',name:'네덜란드어',native:'Nederlands'},{code:'it',flag:'🇮🇹',name:'이탈리아어',native:'Italiano'},
+  {code:'uk',flag:'🇺🇦',name:'우크라이나어',native:'Українська'},{code:'sw',flag:'🇰🇪',name:'스와힐리어',native:'Kiswahili'},
+];
+
+// 상태
+let bibleData=null, currentBookIdx=0, currentChap=1, currentVerse=1;
+let selectedTestament='ot', selectedLang='ko', isDark=false;
+let playing=false, playTimer=null, playProgress=0;
+
+window.addEventListener('load',()=>{
+  const d=new Date(), days=['일','월','화','수','목','금','토'];
+  document.getElementById('today-date').textContent=`${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+  renderLangs(); renderBooksProgress(); renderBooksGrid(); updateBibleHeader();
+});
+
+function goPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  const t=document.getElementById('tab-'+n); if(t)t.classList.add('active');
+}
+
+// ── 성경 데이터 로드 ─────────────────────────────────
+async function loadBibleData(){
+  const urlInput=document.getElementById('json-url-input')||document.getElementById('settings-url-input');
+  const url=urlInput?urlInput.value.trim():'https://raw.githubusercontent.com/thiagobodruk/bible/master/json/ko_ko.json';
+  
+  document.getElementById('setup-card').style.display='none';
+  document.getElementById('bible-error').style.display='none';
+  document.getElementById('bible-text-area').style.display='none';
+  document.getElementById('bible-loading').style.display='flex';
+
+  try{
+    const res=await fetch(url);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    bibleData=data;
+    document.getElementById('bible-loading').style.display='none';
+    document.getElementById('bible-text-area').style.display='block';
+    showToast('✅ 개역한글 66권 로드 완료!');
+    renderBibleText();
+  }catch(e){
+    document.getElementById('bible-loading').style.display='none';
+    document.getElementById('bible-error').style.display='block';
+    console.error(e);
+  }
+}
+
+function resetToSetup(){
+  document.getElementById('bible-error').style.display='none';
+  document.getElementById('setup-card').style.display='block';
+}
+
+function applyAndLoad(){
+  const url=document.getElementById('settings-url-input').value.trim();
+  const inp=document.getElementById('json-url-input');
+  if(inp) inp.value=url;
+  goPage('bible');
+  loadBibleData();
+}
+
+// ── 성경 본문 렌더 ───────────────────────────────────
+function renderBibleText(){
+  updateBibleHeader();
+  const book=ALL_BOOKS[currentBookIdx];
+  document.getElementById('bible-chapter-heading').textContent=`${book.ko} ${currentChap}장`;
+  const c=document.getElementById('verses-container');
+  c.innerHTML='';
+  let verses=[];
+  if(bibleData&&bibleData[currentBookIdx]){
+    const ch=bibleData[currentBookIdx].chapters;
+    if(ch&&ch[currentChap-1]) verses=ch[currentChap-1];
+  }
+  if(!verses.length){
+    c.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-light)">본문을 불러올 수 없습니다</div>';
+    return;
+  }
+  verses.forEach((text,i)=>{
+    const div=document.createElement('div');
+    div.className='verse-line'+(i+1===currentVerse?' highlighted':'');
+    div.setAttribute('data-v',i+1);
+    div.innerHTML=`<span class="verse-num">${i+1}</span><span class="verse-text">${text}</span>`;
+    div.onclick=()=>{
+      document.querySelectorAll('.verse-line').forEach(v=>v.classList.remove('highlighted'));
+      div.classList.add('highlighted'); currentVerse=i+1;
+      showToast(`${book.ko} ${currentChap}:${i+1}`);
+    };
+    c.appendChild(div);
+  });
+}
+
+function updateBibleHeader(){
+  const b=ALL_BOOKS[currentBookIdx];
+  document.getElementById('current-book-display').textContent=b.ko;
+  document.getElementById('current-chap-display').textContent=currentChap+'장';
+}
+
+// ── 모달 ─────────────────────────────────────────────
+function openBookModal(){document.getElementById('book-modal').classList.add('open');switchModalTab('book');}
+function closeModal(e){if(e.target.id==='book-modal')document.getElementById('book-modal').classList.remove('open');}
+function switchModalTab(tab){
+  ['book','chap','verse'].forEach(t=>{
+    document.getElementById('modal-content-'+t).style.display=t===tab?'':'none';
+    document.getElementById('mtab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='chap')renderChapGrid();
+  if(tab==='verse')renderVerseGrid();
+}
+function selectTestament(t){
+  selectedTestament=t;
+  document.getElementById('ot-btn').classList.toggle('active',t==='ot');
+  document.getElementById('nt-btn').classList.toggle('active',t==='nt');
+  renderBooksGrid();
+}
+function renderBooksGrid(){
+  const books=selectedTestament==='ot'?OT_BOOKS:NT_BOOKS;
+  const off=selectedTestament==='ot'?0:39;
+  document.getElementById('books-grid').innerHTML=books.map((b,i)=>
+    `<button class="book-btn${currentBookIdx===off+i?' active':''}" onclick="selectBook(${off+i})">${b.ko}</button>`
+  ).join('');
+}
+function selectBook(idx){currentBookIdx=idx;currentChap=1;currentVerse=1;renderBooksGrid();switchModalTab('chap');}
+function renderChapGrid(){
+  const book=ALL_BOOKS[currentBookIdx];
+  document.getElementById('chap-grid').innerHTML=Array.from({length:book.chaps},(_,i)=>
+    `<button class="num-btn${currentChap===i+1?' active':''}" onclick="selectChap(${i+1})">${i+1}</button>`
+  ).join('');
+}
+function selectChap(n){currentChap=n;renderChapGrid();switchModalTab('verse');}
+function renderVerseGrid(){
+  let cnt=30;
+  if(bibleData&&bibleData[currentBookIdx]){
+    const ch=bibleData[currentBookIdx].chapters;
+    if(ch&&ch[currentChap-1]) cnt=ch[currentChap-1].length;
+  }
+  document.getElementById('verse-grid').innerHTML=Array.from({length:cnt},(_,i)=>
+    `<button class="num-btn${currentVerse===i+1?' active':''}" onclick="selectVerse(${i+1})">${i+1}</button>`
+  ).join('');
+}
+function selectVerse(n){
+  currentVerse=n;
+  document.getElementById('book-modal').classList.remove('open');
+  if(bibleData){renderBibleText();setTimeout(()=>{const el=document.querySelector(`.verse-line[data-v="${n}"]`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},100);}
+  else{updateBibleHeader();}
+}
+
+// ── 찬송 ─────────────────────────────────────────────
+function loadHymn(num){if(num)showToast(`찬송가 ${num}장`);}
+let playDuration=180;
+function togglePlay(){
+  playing=!playing;
+  document.getElementById('play-btn').textContent=playing?'⏸':'▶';
+  if(playing){
+    playTimer=setInterval(()=>{
+      playProgress+=100/playDuration;
+      if(playProgress>=100){playProgress=0;playing=false;document.getElementById('play-btn').textContent='▶';clearInterval(playTimer);}
+      const sec=Math.floor(playProgress*playDuration/100);
+      document.getElementById('progress-fill').style.width=playProgress+'%';
+      document.getElementById('time-cur').textContent=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+    },1000);
+  }else clearInterval(playTimer);
+}
+function seekAudio(e){const r=e.currentTarget.getBoundingClientRect();playProgress=(e.clientX-r.left)/r.width*100;document.getElementById('progress-fill').style.width=playProgress+'%';}
+
+// ── 도전일독 ─────────────────────────────────────────
+const BOOK_PROGRESS=[
+  {name:'창세기',pct:100},{name:'출애굽기',pct:100},{name:'레위기',pct:85},
+  {name:'민수기',pct:60},{name:'신명기',pct:0},{name:'요한복음',pct:100},
+  {name:'로마서',pct:45},{name:'시편',pct:20}
+];
+function renderBooksProgress(){
+  document.getElementById('books-progress-list').innerHTML=BOOK_PROGRESS.map(b=>`
+    <div class="book-progress-item">
+      <div class="bp-name">${b.name}</div>
+      <div class="bp-bar"><div class="bp-fill" style="width:${b.pct}%"></div></div>
+      <div class="bp-pct">${b.pct}%</div>
+    </div>`).join('');
+}
+
+// ── 언어 / 다크모드 / 토스트 ─────────────────────────
+function renderLangs(){
+  document.getElementById('lang-grid').innerHTML=LANGUAGES.map(l=>`
+    <button class="lang-btn${selectedLang===l.code?' active':''}" onclick="selectLang('${l.code}')">
+      <span class="lang-flag">${l.flag}</span>
+      <div><div class="lang-name">${l.name}</div><div class="lang-native">${l.native}</div></div>
+    </button>`).join('');
+}
+function selectLang(code){selectedLang=code;renderLangs();showToast(`${LANGUAGES.find(l=>l.code===code).flag} 언어 변경`);}
+function toggleDark(){isDark=!isDark;document.documentElement.setAttribute('data-theme',isDark?'dark':'');document.getElementById('dark-toggle').classList.toggle('on',isDark);}
+let toastTimer;
+function showToast(msg){
+  if(!msg)return;
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+</script>
+</body>
+</html>
