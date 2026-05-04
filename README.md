@@ -1,2 +1,0 @@
-# bible_book
-bible
